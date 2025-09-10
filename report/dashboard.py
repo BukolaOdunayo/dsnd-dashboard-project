@@ -237,60 +237,63 @@ class BarChart(MatplotlibViz):
     def __init__(self, id="bar_chart"):
        super().__init__(id, fig_getter=self.visualization)
 
-    def visualization(self, model,entity_id):
+def visualization(self, model, entity_id):
+    # Model input
+    try:
+        df = model.model_data(entity_id)
+    except Exception:
+        try:
+            df = model.model_data(int(entity_id))
+        except Exception:
+            df = None
 
-        # Model input
-     try:
-
-        df = model.model_data(entity_id) 
-     except Exception:
-
-       df = model.model_data(int(entity_id))
-     except Exception:
-      df = None
-       # Handle missing or empty data
+    # Handle missing or empty data
     if df is None:
         return None
-       # Using the predictor class attribute pass the data to predict_proba
+
+    # Using the predictor class attribute pass the data to predict_proba
     try:
-             proba = self.predictor.predict_proba(df)
+        proba = self.predictor.predict_proba(df)
     except Exception:
-           # If predictor does not support predict_proba, try predict
-           try:
-               preds = self.predictor.predict(df)
-               # normalize to [0,1] range if regression; clip
-               proba = [[1 - p, p] for p in preds]
-           except Exception:
-                  return None
-       # Index the second column of predict_proba output
-       # The shape should be (n_samples, 2) so [:,1] selects positive-class prob
+        # If predictor does not support predict_proba, try predict
+        try:
+            preds = self.predictor.predict(df)
+            # normalize to [0,1] range if regression; clip
+            proba = [[1 - p, p] for p in preds]
+        except Exception:
+            return None
+
+    # Index the second column of predict_proba output
+    # The shape should be (n_samples, 2) so [:,1] selects positive-class prob
     try:
-           proba_vals = proba[:, 1]
+        proba_vals = proba[:, 1]
     except Exception:
-           # If proba is a list of lists
-           proba_vals = [p[1] for p in proba]
-       # Below, create a `pred` variable set to the number we want to visualize
-  if getattr(model, "name", "").lower() == "team":
-           # mean team risk
-           try:
-               pred = float(sum(proba_vals) / len(proba_vals))
-           except Exception:
-               pred = float(proba_vals[0])
-       else:
-           # single employee -> first value
-           pred = float(proba_vals[0]) if len(proba_vals) > 0 else 0.0
-       # Initialize a matplotlib subplot
-       fig, ax = plt.subplots(figsize=(5, 1.5))
-       # Run the following code unchanged
-       ax.barh([''], [pred])
-       ax.set_xlim(0, 1)
-       ax.set_title('Predicted Recruitment Risk', fontsize=14)
-       # styling helper if available
-       try:
-           self.set_axis_styling(ax, bordercolor="black", fontcolor="black")
-       except Exception:
-           pass
-        return fig
+        # If proba is a list of lists
+        proba_vals = [p[1] for p in proba]
+
+    # Below, create a `pred` variable set to the number we want to visualize
+    if getattr(model, "name", "").lower() == "team":
+        # mean team risk
+        try:
+            pred = float(sum(proba_vals) / len(proba_vals))
+        except Exception:
+            pred = float(proba_vals[0])
+    else:
+        # single employee -> first value
+        pred = float(proba_vals[0]) if len(proba_vals) > 0 else 0.0
+
+    # Initialize a matplotlib subplot
+    fig, ax = plt.subplots(figsize=(5, 1.5))
+    # Run the following code unchanged
+    ax.barh([''], [pred])
+    ax.set_xlim(0, 1)
+    ax.set_title('Predicted Recruitment Risk', fontsize=14)
+    # styling helper if available
+    try:
+        self.set_axis_styling(ax, bordercolor="black", fontcolor="black")
+    except Exception:
+        pass
+    return fig
 
 # Create a subclass of combined_components/CombinedComponent
 # called Visualizations       
@@ -316,24 +319,23 @@ class NotesTable(DataTable):
     # using the same parameters as the parent class
     #### YOUR CODE HERE
     def __init__(self, component_id="notes_table"):
-        
         # Using the model and entity_id arguments
         # pass the entity_id to the model's .notes 
         # method. Return the output
         #### YOUR CODE HERE
-    
-self.id = component_id
-def component_data(self, entity_id, model):
-    try:
-           notes_df = model.notes(entity_id)
-           return notes_df
-           except Exception:
-           # try int conversion fallback
-           try:
-               notes_df = model.notes(int(entity_id))
-               return notes_df
-           except Exception:
-               return []
+        self.id = component_id
+
+    def component_data(self, entity_id, model):
+        try:
+            notes_df = model.notes(entity_id)
+            return notes_df
+        except Exception:
+            # try int conversion fallback
+            try:
+                notes_df = model.notes(int(entity_id))
+                return notes_df
+            except Exception:
+                return []
 
 
 class DashboardFilters(FormGroup):
@@ -455,11 +457,5 @@ async def update_data(r):
     
 
 
-serve()
-try:
-   from fasthtml.server import serve
-   serve()
-except Exception:
-   # If serve() isn't available in this FastHTML build, the user can run via uvicorn:
-   # uvicorn report.dashboard:app --reload
-   pass
+# To run the FastHTML app, use the following command in your terminal:
+# uvicorn report.dashboard:app --reload

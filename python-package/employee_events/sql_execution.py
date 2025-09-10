@@ -42,9 +42,9 @@ class QueryMixin:
 
 
  
- # Leave this code unchanged
-    def query(func):
-      """
+# Leave this code unchanged
+def query(func):
+    """
     Decorator that runs a standard sql execution
     and returns a list of tuples
     """
@@ -56,6 +56,6 @@ class QueryMixin:
         cursor = connection.cursor()
         result = cursor.execute(query_string).fetchall()
         connection.close()
-        return result
-    
-        return run_query
+        return result 
+
+    return run_query
