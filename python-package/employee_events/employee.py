@@ -1,17 +1,24 @@
 # Import the QueryBase class
 #### YOUR CODE HERE
+import pandas as pd
+from .query_base import QueryBase
+
 
 # Import dependencies needed for sql execution
 # from the `sql_execution` module
 #### YOUR CODE HERE
+from .sql_execution import SQLExecutionMixin
 
 # Define a subclass of QueryBase
 # called Employee
 #### YOUR CODE HERE
+class Employee(QueryBase, SQLExecutionMixin):
+
 
     # Set the class attribute `name`
     # to the string "employee"
     #### YOUR CODE HERE
+     name = "employee"
 
 
     # Define a method called `names`
@@ -19,7 +26,8 @@
     # This method should return a list of tuples
     # from an sql execution
     #### YOUR CODE HERE
-        
+     def names(self):
+  
         # Query 3
         # Write an SQL query
         # that selects two columns 
@@ -28,14 +36,25 @@
         # This query should return the data
         # for all employees in the database
         #### YOUR CODE HERE
-    
+        query = """
+
+            SELECT first_name || ' ' || last_name AS full_name,
+
+                   employee_id
+
+            FROM employee
+
+        """
+
+        return self.execute_sql(query)
+
 
     # Define a method called `username`
     # that receives an `id` argument
     # This method should return a list of tuples
     # from an sql execution
     #### YOUR CODE HERE
-        
+     def username(self, id):   
         # Query 4
         # Write an SQL query
         # that selects an employees full name
@@ -43,6 +62,17 @@
         # to only return the full name of the employee
         # with an id equal to the id argument
         #### YOUR CODE HERE
+        query = f"""
+
+            SELECT first_name || ' ' || last_name AS full_name
+
+            FROM employee
+
+            WHERE employee_id = {id}
+
+        """
+
+        return self.execute_sql(query)
 
 
     # Below is method with an SQL query
@@ -53,9 +83,10 @@
     # is returns containing the execution of
     # the sql query
     #### YOUR CODE HERE
-    def model_data(self, id):
 
-        return f"""
+def model_data(self, id):
+
+        query = f"""
                     SELECT SUM(positive_events) positive_events
                          , SUM(negative_events) negative_events
                     FROM {self.name}
@@ -63,3 +94,6 @@
                         USING({self.name}_id)
                     WHERE {self.name}.{self.name}_id = {id}
                 """
+        return pd.DataFrame(self.execute_sql(query),
+
+                 columns=["positive_events", "negative_events"])
